@@ -1,0 +1,28 @@
+[Unit]
+Description=Spring '83 Server
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=spring83
+Group=spring83
+WorkingDirectory=/opt/spring83
+ExecStart=/usr/bin/python3 /opt/spring83/server/spring83_server.py --host 127.0.0.1 --port 8083 --boards-dir /opt/spring83/boards
+Restart=on-failure
+RestartSec=5s
+SyslogIdentifier=spring83
+
+# Security hardening
+ProtectSystem=full
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+
+[Install]
+WantedBy=multi-user.target

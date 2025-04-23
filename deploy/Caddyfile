@@ -1,0 +1,53 @@
+{
+    # Global Caddy options
+    admin off
+    auto_https off  # We'll handle this manually
+    log {
+        output file /var/log/caddy/spring83.log {
+            roll_size 10MB
+            roll_keep 5
+            roll_keep_for 720h
+        }
+    }
+}
+
+# Spring '83 server configuration
+:443 {
+    tls /etc/ssl/certs/spring83.crt /etc/ssl/private/spring83.key
+
+    # Rate limiting
+    rate_limit {
+        zone spring83_limit {
+            requests 30
+            window 10s
+        }
+    }
+
+    # Set security headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline';"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Server "Caddy"
+    }
+
+    # Reverse proxy to Spring '83 server
+    reverse_proxy 127.0.0.1:8083 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Log requests
+    log {
+        output file /var/log/caddy/spring83_access.log {
+            roll_size 10MB
+            roll_keep 5
+            roll_keep_for 720h
+        }
+        format json
+    }
+}

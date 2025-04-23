@@ -1,0 +1,7 @@
+# Testing and development
+pytest==7.4.3
+ruff==0.1.6
+mypy==1.7.0
+
+# Runtime dependencies
+# pure25519 would be vendored in the final project
