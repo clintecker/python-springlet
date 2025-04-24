@@ -106,12 +106,15 @@ make deploy
 
 ## Architecture
 
-```
-+------------+        HTTPS       +-----------+        +-----------+
-|  Internet  |  ───► 443 (Caddy) ─► Spring83  | ◄───► | Flat-file |
-+------------+                    |  Server   |        |   Store   |
-                                  +-----------+        +-----------+
-                                   ^ 127.0.0.1:8083
+```mermaid
+flowchart LR
+    Internet["Internet"] -->|HTTPS 443| Caddy["Caddy"]
+    Caddy -->|Port 8083| Server["Spring83 Server"]
+    Server <-->|Local| Storage["Flat-file Store"]
+    
+    subgraph "127.0.0.1:8083"
+        Server
+    end
 ```
 
 The Spring '83 stack consists of:
@@ -137,23 +140,32 @@ For the complete Spring '83 protocol specification, see:
 
 ## Repository Structure
 
-```
-spring83/
-├─ server/              # Server implementation
-│  ├─ spring83_server.py
-│  ├─ service/          # systemd unit files
-│  ├─ tests/            # Server unit tests  
-│  └─ boards/           # Board storage (git-ignored)
-├─ client/              # Client implementation
-│  ├─ spring83_client.py
-│  └─ tests/            # Client unit tests
-├─ deploy/              # Deployment files
-│  ├─ Caddyfile         # Caddy configuration
-│  ├─ lxc_setup.sh      # LXC container setup
-│  └─ cron/             # Maintenance scripts
-├─ tests/               # End-to-end tests
-├─ .github/workflows/   # CI pipeline
-└─ Makefile             # Build and deployment targets
+```mermaid
+graph TD
+    Root["spring83/"] --> Server["server/"]
+    Root --> Client["client/"]
+    Root --> Deploy["deploy/"]
+    Root --> Tests["tests/"]
+    Root --> GitHub[".github/workflows/"]
+    Root --> Makefile["Makefile"]
+    
+    Server --> ServerPy["spring83_server.py"]
+    Server --> ServiceDir["service/"]
+    Server --> ServerTests["tests/"]
+    Server --> Boards["boards/ (git-ignored)"]
+    
+    Client --> ClientPy["spring83_client.py"]
+    Client --> ClientTests["tests/"]
+    
+    Deploy --> Caddyfile["Caddyfile"]
+    Deploy --> LXCSetup["lxc_setup.sh"]
+    Deploy --> Cron["cron/"]
+    
+    style Root fill:#f9f,stroke:#333
+    style Server fill:#bbf,stroke:#333
+    style Client fill:#bbf,stroke:#333
+    style Deploy fill:#bbf,stroke:#333
+    style Tests fill:#bbf,stroke:#333
 ```
 
 ## Makefile Targets

@@ -75,35 +75,45 @@ The result will live in a single Git repo and bootstrap from `git clone` → `ma
 ---
 
 ## 5. Architecture
-```text
-+------------+        HTTPS       +-----------+
-|  Internet  |  ───► 443 (Caddy) ─► Spring83  |
-+------------+                    |  Server   |
-                                   +-----------+
-                                    ^ 127.0.0.1:8083
-                                    |
-                           Flat‑file boards store
+```mermaid
+flowchart TD
+    Internet["Internet"] -->|HTTPS 443| Caddy["Caddy"]
+    Caddy -->|127.0.0.1:8083| Server["Spring83 Server"]
+    Server -->|Local Access| Storage["Flat-file boards store"]
+    
+    style Internet fill:#f5f5f5,stroke:#333
+    style Caddy fill:#dfd,stroke:#333
+    style Server fill:#bbf,stroke:#333
+    style Storage fill:#fdb,stroke:#333
 ```
 
 ---
 
 ## 6. Repository Layout
-```
-spring83/
-├─ server/
-│  ├─ spring83_server.py
-│  ├─ service/spring83.service      # systemd unit
-│  ├─ tests/
-│  └─ boards/  (git‑ignored)
-├─ client/
-│  └─ spring83_client.py
-├─ deploy/
-│  ├─ Caddyfile
-│  ├─ lxc_setup.sh
-│  └─ cron/cleanup.sh
-├─ .github/workflows/ci.yml
-├─ LICENSE (MIT)
-└─ README.md
+```mermaid
+graph TD
+    Root["spring83/"] --> Server["server/"]
+    Root --> Client["client/"]
+    Root --> Deploy["deploy/"]
+    Root --> GitHub[".github/workflows/ci.yml"]
+    Root --> License["LICENSE (MIT)"]
+    Root --> Readme["README.md"]
+    
+    Server --> ServerPy["spring83_server.py"]
+    Server --> ServiceDir["service/spring83.service"]
+    Server --> ServerTests["tests/"]
+    Server --> Boards["boards/ (git-ignored)"]
+    
+    Client --> ClientPy["spring83_client.py"]
+    
+    Deploy --> Caddyfile["Caddyfile"]
+    Deploy --> LXCSetup["lxc_setup.sh"]
+    Deploy --> Cron["cron/cleanup.sh"]
+    
+    style Root fill:#f9f,stroke:#333
+    style Server fill:#bbf,stroke:#333
+    style Client fill:#bbf,stroke:#333
+    style Deploy fill:#bbf,stroke:#333
 ```
 
 ---
