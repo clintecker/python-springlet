@@ -4,7 +4,21 @@ A minimal, reproducible reference implementation of the [Spring '83](https://git
 
 ## About Spring '83
 
-Spring '83 is a simple protocol for publishing and distributing small web pages (boards) that was created by Robin Sloan. This reference implementation follows the June 2022 draft specification and focuses on the core "happy path" functionality.
+Spring '83 is a simple protocol for publishing and distributing small web pages (boards) that was created by Robin Sloan. This reference implementation follows the [June 2022 draft specification](https://github.com/robinsloan/spring-83/blob/main/draft-20220629.md) and focuses on the core "happy path" functionality.
+
+Spring '83 was designed as an alternative to existing social media paradigms, enabling a simple way to follow people online while avoiding the problems of timelines, RSS, and email. The protocol emphasizes simplicity, creativity, and user expression over engagement metrics.
+
+Key protocol characteristics:
+- Uses Ed25519 cryptographic keypairs for identity and authorization
+- Boards are HTML fragments limited to 2,217 bytes
+- No JavaScript or external resources allowed
+- Each publisher maintains a single board that can be updated
+- Cryptographically signed to ensure content authenticity
+- Designed for a decentralized, federated network
+- Ephemeral content model with no built-in interaction mechanisms
+- No formal relationship tracking or following mechanisms
+
+Spring '83 intentionally lacks common social media features like likes, replies, or persistent history, encouraging creators to develop their own methods of interaction. This design philosophy prioritizes a "gentle flowing stream" of content over information hoarding and traditional engagement metrics.
 
 ## Features
 
@@ -56,6 +70,30 @@ echo "http://localhost:8083/ab589f4dde9fce4180fcf42c7b05185b0a02a5d682e353fa3917
 python client/spring83_client.py
 ```
 
+**Publishing a Board:**
+```bash
+# Create a keypair (using the Ed25519 algorithm)
+# The key must end with "83e" followed by month (01-12) and year (e.g., 2212)
+python -c "from pure25519 import eddsa; sk, pk = eddsa.create_keypair(); print(f'Private key: {sk.to_ascii(encoding=\"hex\")}\nPublic key: {pk.to_ascii(encoding=\"hex\")}')"
+
+# Create an HTML board (must be under 2217 bytes)
+cat > myboard.html << EOF
+<div style="font-family: sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
+  <h1>My Spring '83 Board</h1>
+  <p>Hello, world! This is my first Spring '83 board.</p>
+  <time datetime="$(date -u +"%Y-%m-%dT%H:%M:%SZ")">$(date)</time>
+</div>
+EOF
+
+# Sign and publish your board (replace KEY with your public key)
+curl -X PUT \
+  -H "Content-Type: text/html" \
+  -H "Spring-Version: 83" \
+  -H "Spring-Signature: YOUR_SIGNATURE_HERE" \
+  --data-binary @myboard.html \
+  http://localhost:8083/YOUR_PUBLIC_KEY
+```
+
 ### Deployment to Proxmox
 
 ```bash
@@ -85,10 +123,17 @@ The Spring '83 stack consists of:
 ## Protocol Implementation Details
 
 - **Board Validation**: Keys must match regex `^[0-9a-f]{57}83e(0[1-9]|1[0-2])\d{2}$`
+- **Key Expiration**: Keys automatically expire after two years based on the month/year suffix
 - **Size Limit**: Boards cannot exceed 2217 bytes
 - **TTL**: Boards expire after 22 days
 - **Validation**: Each board must contain a `<time>` element with ISO-UTC timestamp
 - **Special Keys**: Handles infernal key denial and test key responses
+- **Security**: All boards must be cryptographically signed with the publisher's private key
+- **Client Rendering**: Boards are displayed as HTML with no JavaScript execution
+
+For the complete Spring '83 protocol specification, see:
+- [Specifying Spring '83](https://www.robinsloan.com/lab/specifying-spring-83/) - Protocol motivation and philosophy
+- [Draft Specification](https://github.com/robinsloan/spring-83/blob/main/draft-20220629.md) - Technical details and implementation guidelines
 
 ## Repository Structure
 
